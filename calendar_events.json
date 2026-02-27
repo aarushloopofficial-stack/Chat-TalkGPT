@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "title": "Test Event",
+    "description": "Test Description",
+    "date": "2026-03-01",
+    "time": "10:00",
+    "event_type": "general",
+    "reminder": null,
+    "completed": false,
+    "created_at": "2026-02-23T23:17:47.611427"
+  },
+  {
+    "id": 2,
+    "title": "Math Exam",
+    "description": "Chapter 1-5",
+    "date": "2026-03-15",
+    "time": "10:00",
+    "event_type": "exam",
+    "reminder": 30,
+    "completed": false,
+    "created_at": "2026-02-23T23:21:30.642604"
+  }
+]

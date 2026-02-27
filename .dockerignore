@@ -1,0 +1,85 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+Dockerfile*
+docker-compose*
+.docker/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Memory/Data (we'll mount these)
+memory/*.json
+backend/memory/*.json
+
+# Voice samples (can be large)
+backend/voice_samples/*.mp3
+backend/voice_samples/*.wav
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+tests/
+test/
+*.test.py
+*_test.py
+
+# Documentation
+docs/_build/
+*.md
+!README.md
+
+# Misc
+.cache/
+*.bak
+*.tmp
+*.temp

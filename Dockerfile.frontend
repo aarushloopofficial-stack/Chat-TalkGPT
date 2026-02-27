@@ -1,0 +1,54 @@
+# Multi-stage build for Chat&Talk GPT Frontend
+
+# Stage 1: Builder - Build the frontend if needed
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source files
+COPY frontend/ ./
+
+# Build the application (if there's a build process)
+# RUN npm run build
+
+# Stage 2: Production - Nginx serving static files
+FROM nginx:alpine AS production
+
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy frontend files to nginx html directory
+COPY frontend/index.html /usr/share/nginx/html/index.html
+COPY frontend/script.js /usr/share/nginx/html/script.js
+COPY frontend/style.css /usr/share/nginx/html/style.css
+
+# Copy React components if they exist
+COPY frontend/src /usr/share/nginx/html/src
+
+# Create non-root user for security
+RUN addgroup -g 1000 -S appgroup && \
+    adduser -u 1000 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /usr/share/nginx/html && \
+    chown -R appuser:appgroup /var/cache/nginx && \
+    chown -R appuser:appgroup /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R appuser:appgroup /var/run/nginx.pid
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+
+# Run nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,86 @@
+# Multi-stage build for Chat&Talk GPT Backend
+
+# Stage 1: Base image with Python
+FROM python:3.11-slim-bookworm AS base
+
+# Install system dependencies for pyttsx3 and other packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    portaudio19-dev \
+    libffi-dev \
+    libssl-dev \
+    libasound2-dev \
+    libgbm1 \
+    wget \
+    ffmpeg \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Stage 2: Builder - Install Python dependencies
+FROM base AS builder
+
+WORKDIR /app
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements files
+COPY backend/requirements.txt .
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r backend/requirements.txt
+
+# Stage 3: Production - Final image
+FROM base
+
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY backend/ ./backend/
+COPY requirements.txt .
+COPY memory/ ./memory/
+COPY config/ ./config/
+
+# Create necessary directories
+RUN mkdir -p /app/backend/memory/chats \
+             /app/backend/voice_samples \
+             /app/backend/memory/aakansha_weather_reminders.json
+
+# Copy .env file template (will be overridden by docker-compose)
+COPY .env .env.docker
+
+# Set ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Environment variables
+ENV PYTHONPATH=/app \
+    BACKEND_HOST=0.0.0.0 \
+    BACKEND_PORT=8000
+
+# Run the application
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
